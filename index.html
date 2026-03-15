@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TDXRay — Microarchitectural Side-Channel Analysis of Intel TDX</title>
+  <meta name="description" content="TDXRay is a host-side measurement framework that produces highly accurate, cache-line-granular memory access traces of unmodified confidential VMs running inside Intel TDX." />
+  <meta property="og:title" content="TDXRay" />
+  <meta property="og:description" content="Microarchitectural Side-Channel Analysis of Intel TDX for Real-World Workloads" />
+  <meta property="og:image" content="img/logo.png" />
+
+  <link rel="icon" type="image/png" href="img/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NAV
+═══════════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-logo">
+    <img src="img/logo.png" alt="TDXRay logo" />
+    <span>TDX<em>Ray</em></span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#explainer">Overview</a></li>
+    <li><a href="#how">Primitives</a></li>
+    <li><a href="#attack">Attack</a></li>
+    <li><a href="#mitigations">Mitigations</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#team">Authors</a></li>
+    <li><a href="paper.pdf" class="nav-cta" target="_blank">Read Paper</a></li>
+  </ul>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <canvas id="heatmap-canvas"></canvas>
+  <div class="hero-inner">
+
+    <div class="hero-badge">
+      <span class="dot"></span>
+      To appear at IEEE S&amp;P 2026
+    </div>
+
+    <img src="img/logo.png" alt="TDXRay" class="hero-logo" />
+
+    <h1 class="hero-title">TDX<span class="accent">Ray</span></h1>
+
+    <p class="hero-sub">
+      Microarchitectural Side-Channel Analysis of Intel TDX for Real-World Workloads
+    </p>
+
+    <p class="hero-authors">
+      <span>Tristan Hornetz</span><span style="color: yellow;">*</span> &nbsp;·&nbsp;
+      <span>Hosein Yavarzadeh</span><span style="color: yellow;">*</span>
+      <br/>
+      <span>Albert Cheu</span> &nbsp;·&nbsp;
+      <span>Adria Gascon</span> &nbsp;·&nbsp;
+      <span>Lukas Gerlach</span>
+      <br>
+      <span>Daniel Moghimi</span> &nbsp;·&nbsp;
+      <span>Phillipp Schoppmann</span> &nbsp;·&nbsp;
+      <span>Michael Schwarz</span> &nbsp;·&nbsp;
+      <span>Ruiyi Zhang</span>
+      <br><span style="color: yellow;">*</span> <span style="font-size:.75rem;color:var(--muted2);">Equal contribution joint first authors</span></span>
+    </p>
+
+    <div class="hero-actions">
+      <a href="paper.pdf" class="btn btn-primary" target="_blank">
+        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Read Paper
+      </a>
+      <a href="https://github.com/" class="btn btn-ghost" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.73.083-.73 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23a11.52 11.52 0 0 1 3-.404c1.02.005 2.045.138 3 .404 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Code (Coming Soon)
+      </a>
+      <a href="#demo" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Watch Demo
+      </a>
+    </div>
+
+  </div>
+
+  <!-- <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div> -->
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     WHAT IS TDX / EXPLAINER
+═══════════════════════════════════════════════════════════════ -->
+<div id="explainer">
+  <div class="container">
+    <div class="explainer-grid">
+
+      <div class="reveal">
+        <p class="section-label">Background</p>
+        <h2 class="section-title">Confidential<br/>Computing Promises Privacy</h2>
+        <p style="color:var(--muted);margin-bottom:1.2rem;line-height:1.75;">
+          Cloud providers now let you run code inside <strong style="color:var(--white);">hardware-protected virtual machines</strong> — called Confidential VMs — where even the cloud operator cannot see what's happening inside. Intel TDX (Trust Domain Extensions) is one such technology, increasingly used to protect sensitive tasks like private AI inference, financial applications, and medical analytics.
+        </p>
+        <p style="color:var(--muted);margin-bottom:1.2rem;line-height:1.75;">
+          TDX encrypts all guest memory and prevents the hypervisor (host) from reading or modifying guest data directly. Sounds airtight — but the host still <strong style="color:var(--white);">shares physical hardware</strong> with the guest: caches, interconnects, and memory controllers all handle both.
+        </p>
+        <p style="color:var(--muted);line-height:1.75;">
+          <strong style="color:var(--teal);">TDXRay</strong> systematically exploits these shared resources as <em>side channels</em> — indirect signals that leak what the encrypted VM is doing, without ever breaking the cryptographic boundary.
+        </p>
+      </div>
+
+      <!-- animated chip diagram -->
+      <div class="reveal" style="transition-delay:.15s">
+        <div class="chip-diagram">
+          <!-- pins -->
+          <div class="chip-pins top">
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+          </div>
+          <div class="chip-pins bottom">
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+          </div>
+          <div class="chip-pins left">
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+          </div>
+          <div class="chip-pins right">
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+            <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+          </div>
+
+          <div class="chip-box">
+            <div class="chip-label">Intel TDX CPU</div>
+            <div class="scan-line"></div>
+
+            <table id="cache-table" style="border-collapse:collapse;margin:.4rem .6rem;">
+              <thead>
+                <tr>
+                  <td style="font-family:var(--font-mono);font-size:.55rem;color:var(--muted2);padding:0 4px 4px;text-align:center;">ADDR</td>
+                  <td style="font-family:var(--font-mono);font-size:.55rem;color:var(--muted2);padding:0 4px 4px;text-align:center;">STATE</td>
+                  <td style="font-family:var(--font-mono);font-size:.55rem;color:var(--muted2);padding:0 4px 4px;text-align:center;">LINE</td>
+                  <td style="font-family:var(--font-mono);font-size:.55rem;color:var(--muted2);padding:0 4px 4px;text-align:center;">HIT</td>
+                </tr>
+              </thead>
+              <tbody id="cache-tbody"></tbody>
+            </table>
+
+            <div style="font-family:var(--font-mono);font-size:.58rem;color:var(--muted2);text-align:center;padding:0 1rem .3rem;">
+              Cache state observable from host
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOUR PRIMITIVES
+═══════════════════════════════════════════════════════════════ -->
+<section id="how">
+  <div class="container">
+
+    <div class="reveal">
+      <p class="section-label">Four New Side-Channel Primitives in TDX</p>
+      <h2 class="section-title">How TDXRay Sees<br/>Through Encryption</h2>
+      <p class="section-intro">
+        We exploit four host-observable signals in Intel TDX. Each exploits a different shared resource — together they cover everything from page-level to 64-byte cache-line granularity.
+      </p>
+    </div>
+
+    <div class="primitives-grid">
+
+      <div class="primitive-card reveal" style="transition-delay:.05s">
+        <div class="primitive-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <div class="primitive-tag">01 — Page Level</div>
+        <h3>SEPTrace</h3>
+        <p>Intel TDX exposes a host API to temporarily block/unblock guest memory page translations. We show a malicious hypervisor can repeatedly block all pages in a region and wait for faults — each fault reveals exactly which page the guest just accessed, building a deterministic page-level trace.</p>
+        <div class="granularity"><span class="g-dot"></span>4 kB / 2 MB granularity</div>
+      </div>
+
+      <div class="primitive-card reveal" style="transition-delay:.1s">
+        <div class="primitive-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+        <div class="primitive-tag">02 — Cache Level</div>
+        <h3>Load+Probe</h3>
+        <p>Although TDX prevents reading encrypted guest memory, reading a physical alias address still takes measurably longer when the guest previously cached that line. The timing difference reveals not only whether a cache line is cached — but even whether the guest <em>read</em> or <em>wrote</em> it.</p>
+        <div class="granularity"><span class="g-dot"></span>64-byte granularity · Cross-core</div>
+      </div>
+
+      <div class="primitive-card reveal" style="transition-delay:.15s">
+        <div class="primitive-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="primitive-tag">03 — Timer-Free</div>
+        <h3>TSX-Probe</h3>
+        <p>Intel TSX hardware transactions abort when they encounter a conflicting cache line. We wrap a read of a guest memory alias inside a TSX transaction — if the guest has that line cached in L1, the transaction aborts. No timer needed, no frequency-scaling noise — a clean binary signal.</p>
+        <div class="granularity"><span class="g-dot"></span>64-byte · Rd/Wr distinction</div>
+      </div>
+
+      <div class="primitive-card reveal" style="transition-delay:.2s">
+        <div class="primitive-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
+        <div class="primitive-tag">04 — Synchronization</div>
+        <h3>MWAIT-Probe</h3>
+        <p>The <code style="color:var(--teal);background:var(--teal-faint);padding:.1em .3em;border-radius:3px;">mwait</code> instruction pauses execution until a specific memory address is accessed. We show it works on the physical address — including TDX private memory. This provides cache-line-granular synchronization: the host can precisely align its measurements with guest execution.</p>
+        <div class="granularity"><span class="g-dot"></span>64-byte · Synchronizing primitive</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     TDXRAY FRAMEWORK
+═══════════════════════════════════════════════════════════════ -->
+<div id="framework">
+  <div class="container">
+
+    <div class="reveal">
+      <p class="section-label">The Framework</p>
+      <h2 class="section-title">TDXRay: Putting It All Together</h2>
+      <p class="section-intro">
+        TDXRay is a Linux kernel module that combines all four primitives into a practical tracing system. It operates entirely within legitimate host interfaces, requires no guest cooperation, and produces cache-line-granular memory access traces of any unmodified confidential VM.
+      </p>
+    </div>
+
+    <div class="framework-inner">
+
+      <!-- flow diagram -->
+      <div class="reveal" style="transition-delay:.1s">
+        <div class="flow-diagram">
+          <div class="flow-label">Untrusted Host (VMM)</div>
+          <div class="flow-row">
+            <div class="flow-box host">Block(T) via seamcall</div>
+          </div>
+          <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+          <div class="flow-row">
+            <div class="flow-box host">Resume TD execution</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.5rem;margin:.4rem 0">
+            <div style="height:1px;background:var(--border)"></div>
+            <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted2)">TD runs</span>
+            <div style="height:1px;background:var(--border)"></div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-box td">Access blocked page → #PF (TD-exit)</div>
+          </div>
+          <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+          <div class="flow-row">
+            <div class="flow-box active">Probe cache state (TSX-Probe)</div>
+          </div>
+          <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+          <div class="flow-row">
+            <div class="flow-box host">Log GPA + accessed cache lines → Unblock</div>
+          </div>
+          <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
+          <div class="flow-row">
+            <div class="flow-box active" style="background:rgba(0,210,210,0.12);font-size:.75rem;">Cache-line-granular access trace</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- accuracy stats -->
+      <div class="reveal" style="transition-delay:.2s">
+        <h3 style="font-family:var(--font-head);font-size:1.3rem;font-weight:700;margin-bottom:.6rem;">AES Benchmark Results</h3>
+        <p style="font-size:.9rem;color:var(--muted);margin-bottom:1.8rem;line-height:1.65;">
+          We validated TDXRay on the classic AES T-table cache attack — a standard benchmark for cache side channels. All four primitives successfully recover the secret key.
+        </p>
+
+        <div class="accuracy-bar-group">
+          <div class="accuracy-item">
+            <label>TSX-Probe <span>100% after 100 encryptions</span></label>
+            <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+          </div>
+          <div class="accuracy-item">
+            <label>PMC-based Load+Probe <span>100% after 100 encryptions</span></label>
+            <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+          </div>
+          <div class="accuracy-item">
+            <label>MWAIT-Probe <span>97.7% success rate</span></label>
+            <div class="bar-track"><div class="bar-fill" style="width:97.7%"></div></div>
+          </div>
+          <div class="accuracy-item">
+            <label>TSC-based Load+Probe <span>99.4% success rate</span></label>
+            <div class="bar-track"><div class="bar-fill" style="width:99.4%"></div></div>
+          </div>
+        </div>
+
+        <p style="font-family:var(--font-mono);font-size:.72rem;color:var(--muted2);margin-top:1.2rem;">
+          Evaluated on Intel Xeon 6736P (Granite Rapids) · TDX Module v2.0
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     ATTACK — LLM PROMPT RECOVERY
+═══════════════════════════════════════════════════════════════ -->
+<section id="attack">
+  <div class="container">
+
+    <div class="reveal">
+      <p class="section-label">Case Study: Private LLM Inference</p>
+      <h2 class="section-title">Stealing User Prompts<br/>from Encrypted VMs</h2>
+      <p class="section-intro">
+        Confidential computing is rapidly adopted for private AI inference — users want their prompts kept secret from the cloud operator. TDXRay directly threatens this guarantee.
+      </p>
+    </div>
+
+    <!-- stat cards -->
+    <div class="stats-row reveal">
+      <div class="stat-card">
+        <div class="number" data-target="91.5" data-suffix="%">0%</div>
+        <div class="label">Avg. similarity · Llama 3.2</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" data-target="94.2" data-suffix="%">0%</div>
+        <div class="label">Avg. similarity · Gemma 3</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" data-target="93.6" data-suffix="%">0%</div>
+        <div class="label">Full credit card details leaked</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" data-target="99.8" data-suffix="%">0%</div>
+        <div class="label">SSN recovery · Gemma 3</div>
+      </div>
+    </div>
+
+    <!-- how the attack works -->
+    <div class="attack-grid reveal" style="margin-bottom:3rem;">
+      <div>
+        <h3 style="font-family:var(--font-head);font-size:1.25rem;font-weight:700;margin-bottom:1rem;">Why Tokenization Leaks</h3>
+        <p style="font-size:.9rem;color:var(--muted);margin-bottom:1rem;line-height:1.75;">
+          Before an LLM processes your prompt, it runs a <strong style="color:var(--white);">tokenizer</strong> — a program that converts text into numeric IDs using a hash map stored in memory. Each word or sub-word lookup traverses a linked list in that hash map, creating a <strong style="color:var(--teal);">predictable, secret-dependent memory access pattern</strong>.
+        </p>
+        <p style="font-size:.9rem;color:var(--muted);margin-bottom:1rem;line-height:1.75;">
+          The attacker monitors which hash map nodes the tokenizer visits — and since the hash function is public, the bucket traversal uniquely identifies each token. Stitch the tokens together, and you have the full prompt.
+        </p>
+        <p style="font-size:.9rem;color:var(--muted);line-height:1.75;">
+          Critically, this attack happens entirely on the <strong style="color:var(--white);">CPU during tokenization</strong> — before inference even begins — meaning GPU confidentiality offers no protection.
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:.7rem;margin-top:1.5rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--teal-faint);border:1px solid var(--border-mid);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);font-weight:700;">1</div>
+            <div>
+              <div style="font-size:.85rem;font-weight:600;margin-bottom:.15rem;">Offline: Binary Analysis</div>
+              <div style="font-size:.78rem;color:var(--muted);">Analyze the victim binary to find token hash map layout in virtual memory.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--teal-faint);border:1px solid var(--border-mid);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);font-weight:700;">2</div>
+            <div>
+              <div style="font-size:.85rem;font-weight:600;margin-bottom:.15rem;">Online: Locate Token Pages</div>
+              <div style="font-size:.78rem;color:var(--muted);">Send crafted prompts to map token positions to physical pages. One-time setup.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--teal-faint);border:1px solid var(--border-mid);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);font-weight:700;">3</div>
+            <div>
+              <div style="font-size:.85rem;font-weight:600;margin-bottom:.15rem;">Per Prompt: Trace &amp; Reconstruct</div>
+              <div style="font-size:.78rem;color:var(--muted);">Record cache-line-granular trace during tokenization → decode tokens → recover prompt verbatim.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- terminal output -->
+      <div>
+        <div class="terminal" id="typewriter">
+          <div class="terminal-bar">
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <div class="terminal-dot"></div>
+            <span class="terminal-title">tdxray — prompt exfiltration</span>
+          </div>
+          <div class="terminal-body">
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="prompt">$</span> <span class="normal">./tdxray --target llama3.2 --mode trace</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment"># TDXRay v1.0 — monitoring tokenizer pages</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment"># Target: llama.cpp · Llama 3.2 (128K tokens)</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[+] Monitoring 2,175 token pages…</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[+] Victim tokenizing prompt…</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">--- Recovered tokens (raw) ---</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="leaked">B[2813][1]:"Hello" B[3642][2]:"_World" B[1405][0]:"!" </span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="leaked">B[9201][1]:"_What" B[421][0]:"_is" B[6033][1]:"_your"</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="leaked">B[1120][0]:"_SSN" B[88][1]:"?" </span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">--- Reconstructed prompt ---</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="success">→ "Hello World! What is your SSN?"</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[✓] Similarity score: 100.0%</span></div>
+            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[✓] Latency overhead: 62.1ms (imperceptible)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Demo -->
+    <div id="demo" class="reveal">
+      <div class="divider-label"><span>Video Demo</span></div>
+      <div class="demo-video-wrap">
+        <!--
+          REPLACE THIS SECTION WITH YOUR VIDEO.
+          Option A — local video file:
+            <video controls poster="img/demo-poster.jpg">
+              <source src="assets/demo.mp4" type="video/mp4">
+            </video>
+          Option B — YouTube embed:
+            <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
+              allowfullscreen allow="autoplay; encrypted-media"></iframe>
+          Then remove the .demo-placeholder div below.
+        -->
+        <div class="demo-placeholder">
+          <div class="play-btn" onclick="alert('Replace this with your video embed. See the HTML comment above.')">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <p>Demo Video — Replace with your embed</p>
+          <p style="font-size:.65rem;margin-top:.25rem;color:var(--muted2);">See HTML comment in source for instructions</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MITIGATIONS
+═══════════════════════════════════════════════════════════════ -->
+<div id="mitigations">
+  <div class="container">
+
+    <div class="reveal">
+      <p class="section-label">Defenses</p>
+      <h2 class="section-title">Mitigations</h2>
+      <p class="section-intro">
+        We investigate both short-term software-level mitigations and long-term architectural changes that hardware vendors can adopt.
+      </p>
+    </div>
+
+    <div class="mitigation-list">
+
+      <div class="mit-card reveal" style="transition-delay:.05s">
+        <div class="mit-icon">🔐</div>
+        <h3>Data-Oblivious Tokenization</h3>
+        <p>Replace the standard hash map with a data-oblivious map that produces indistinguishable access patterns regardless of input. We implement this for Llama 3.2's full 128K-token vocabulary and show acceptable performance overhead — inference time still dominates for real workloads.</p>
+      </div>
+
+      <div class="mit-card reveal" style="transition-delay:.1s">
+        <div class="mit-icon">📊</div>
+        <h3>Anomaly Detection in Guest</h3>
+        <p>TDXRay leaves observable microarchitectural footprints: inflated page fault rates and elevated cache miss counts. A monitor inside the confidential VM can track these performance counters and detect when monitoring is occurring. TDX supports virtualized performance counters, making this practical.</p>
+      </div>
+
+      <div class="mit-card reveal" style="transition-delay:.15s">
+        <div class="mit-icon">🚧</div>
+        <h3>Restrict Block/Unblock API</h3>
+        <p>SEPTrace is only possible because TDX exposes page block/unblock APIs for live migration. Many static workloads don't need this. Future TDX versions could provide a guest-configurable option to disable these APIs for critical memory regions, eliminating SEPTrace entirely.</p>
+      </div>
+
+      <div class="mit-card reveal" style="transition-delay:.2s">
+        <div class="mit-icon">🏷️</div>
+        <h3>HKID-Aware Cache Tags</h3>
+        <p>Load+Probe and TSX-Probe work because the cache coherence protocol doesn't distinguish cache lines with identical physical addresses but different encryption key IDs (HKIDs). Incorporating HKID into cache tags would allow these lines to coexist, eliminating the conflict-based timing signal.</p>
+      </div>
+
+      <div class="mit-card reveal" style="transition-delay:.25s">
+        <div class="mit-icon">⚡</div>
+        <h3>Forced Alias Cache Misses</h3>
+        <p>As an alternative hardware fix, accesses to physical aliases of TDX private memory could be forced to always behave as cache misses or trigger hardware faults — removing the attacker's ability to distinguish cached vs. uncached states through alias addresses.</p>
+      </div>
+
+      <div class="mit-card reveal" style="transition-delay:.3s">
+        <div class="mit-icon">🔀</div>
+        <h3>Randomized Hash Functions</h3>
+        <p>If the tokenizer's hash function used a runtime-generated secret seed, the mapping from strings to bucket IDs would be unpredictable to the attacker. This prevents recovering which token was accessed from a given bucket traversal — though it doesn't address all access-pattern leakage.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     CITATION
+═══════════════════════════════════════════════════════════════ -->
+<section id="citation" style="padding:5rem 2rem;background:var(--bg);">
+  <div class="container" style="max-width:820px;">
+    <div class="reveal" style="text-align:center;margin-bottom:2.5rem;">
+      <p class="section-label" style="justify-content:center;display:flex;">Cite</p>
+      <h2 class="section-title">BibTeX</h2>
+    </div>
+    <div class="reveal">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.03);">
+          <span style="font-family:var(--font-mono);font-size:.7rem;color:var(--muted2);letter-spacing:.1em;">BIBTEX</span>
+          <button id="copy-bibtex" style="background:var(--teal-faint);border:1px solid var(--border-mid);color:var(--teal);font-family:var(--font-mono);font-size:.72rem;padding:.3rem .8rem;border-radius:6px;cursor:pointer;transition:background .2s;">Copy BibTeX</button>
+        </div>
+        <pre id="bibtex-content" style="padding:1.5rem;font-family:var(--font-mono);font-size:.82rem;color:#b0cce0;line-height:1.8;overflow-x:auto;white-space:pre-wrap;">@inproceedings{Hornetz2026TDXRay,
+  title     = {{TDXRay}: Microarchitectural Side-Channel Analysis of
+               Intel {TDX} for Real-World Workloads},
+  author    = {Hornetz, Tristan and Yavarzadeh, Hosein and Cheu, Albert
+               and Gascon, Adria and Gerlach, Lukas and Moghimi, Daniel
+               and Schoppmann, Phillipp and Schwarz, Michael
+               and Zhang, Ruiyi},
+  booktitle = {IEEE Symposium on Security and Privacy (S\&P)},
+  year      = {2026},
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FAQ
+═══════════════════════════════════════════════════════════════ -->
+<section id="faq">
+  <div class="container">
+    <div class="reveal" style="text-align:center;margin-bottom:3rem;">
+      <p class="section-label" style="display:flex;justify-content:center;">FAQ</p>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+
+    <div class="faq-list reveal">
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Is my Intel TDX deployment at risk?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">If you are running workloads that process sensitive data — especially LLM inference with user prompts — inside Intel TDX and your hypervisor is potentially untrusted or compromised, then yes, these attacks apply. The core issue is not a software bug that can be patched immediately; it requires architectural changes or application-level mitigations.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Does this break TDX completely?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">TDXRay does not break TDX's cryptographic guarantees — no encrypted memory is read directly. Instead, it exploits microarchitectural side effects of shared hardware. Intel's own threat model explicitly excludes microarchitectural side channels, so this is a known limitation of the technology that this paper makes concrete and quantifies against real workloads.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Do you need physical access to the server?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">No. TDXRay runs entirely in software on the host machine — specifically in the hypervisor/kernel. The attacker model is a malicious or compromised cloud operator who controls the host kernel and hypervisor. No physical access, power measurements, or electromagnetic probes are required.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Does this affect AMD SEV or ARM CCA as well?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">This paper focuses exclusively on Intel TDX. AMD SEV-SNP and ARM CCA have different hardware interfaces, and while similar microarchitectural attack classes exist (e.g., cache attacks on AMD SEV have been demonstrated by others), the specific primitives described here — SEPTrace, Load+Probe, TSX-Probe, and MWAIT-Probe — exploit Intel-specific hardware features.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Has Intel been notified?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">Yes. We followed responsible disclosure and notified Intel and major vendors that publicly rely on confidential computing for private inference — including Apple, Anthropic, Google, Microsoft, Meta, and OpenAI — in November 2025. We are currently awaiting their responses.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Which Intel CPUs are affected?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">We evaluated TDXRay on three TDX-enabled Intel Xeon processors: Xeon Silver 4510 (Sapphire Rapids), Xeon Gold 6526Y (Emerald Rapids), and Xeon 6736P (Granite Rapids). All three are affected. These represent the current generation of Intel server CPUs that support TDX.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          Is the code available?
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a">We will release TDXRay and all evaluation artifacts upon paper acceptance to support reproducibility and ongoing assessment of confidential computing platforms.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     TEAM
+═══════════════════════════════════════════════════════════════ -->
+<div id="team">
+  <div class="container">
+
+    <div class="reveal" style="text-align:center;margin-bottom:2.5rem;">
+      <p class="section-label" style="display:flex;justify-content:center;">Research Team</p>
+      <h2 class="section-title">Authors</h2>
+      <p class="equal-note">* Equal contribution joint first authors</p>
+    </div>
+
+    <div class="team-grid reveal">
+
+      <div class="team-card">
+        <div class="team-avatar">TH</div>
+        <h4><a href="#">Tristan Hornetz</a><sup style="color:var(--teal);font-size:.65rem;">*</sup></h4>
+        <p>CISPA</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">HY</div>
+        <h4><a href="#">Hosein Yavarzadeh</a><sup style="color:var(--teal);font-size:.65rem;">*</sup></h4>
+        <p>UC San Diego</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">AC</div>
+        <h4><a href="#">Albert Cheu</a></h4>
+        <p>Google</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">AG</div>
+        <h4><a href="#">Adria Gascon</a></h4>
+        <p>Google</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">LG</div>
+        <h4><a href="#">Lukas Gerlach</a></h4>
+        <p>CISPA</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">DM</div>
+        <h4><a href="#">Daniel Moghimi</a></h4>
+        <p>Google</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">PS</div>
+        <h4><a href="#">Phillipp Schoppmann</a></h4>
+        <p>Google</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">MS</div>
+        <h4><a href="#">Michael Schwarz</a></h4>
+        <p>CISPA</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">RZ</div>
+        <h4><a href="#">Ruiyi Zhang</a></h4>
+        <p>CISPA</p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <img src="img/logo.png" alt="TDXRay" />
+      <span>TDX<em>Ray</em></span>
+    </div>
+    <ul class="footer-links">
+      <li><a href="paper.pdf">Paper (PDF)</a></li>
+      <li><a href="https://github.com/">GitHub</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#team">Authors</a></li>
+    </ul>
+    <p class="footer-copy">© 2026 The TDXRay Authors</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
