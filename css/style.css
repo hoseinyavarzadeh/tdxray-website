@@ -181,7 +181,7 @@ nav {
 }
 
 .hero-logo {
-  width: 200px; height: 200px;
+  width: 350px; height: 350px;
   margin: 0 auto 1.8rem;
   object-fit: contain;
   filter: drop-shadow(0 0 30px rgba(0,210,210,0.5));
