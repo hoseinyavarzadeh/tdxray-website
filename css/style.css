@@ -998,3 +998,18 @@ footer {
   .hero-title { font-size: 2.8rem; }
   section { padding: 4rem 1.25rem; }
 }
+
+td.cl {
+  width: 12px;
+  height: 10px;
+  padding: 2px;
+  border-radius: 2px;
+  background: var(--teal-faint);
+  border: 1px solid var(--border);
+  transition: background .3s, border-color .3s, box-shadow .3s;
+}
+td.cl.hit {
+  background: rgba(0,210,210,0.35);
+  border-color: var(--teal);
+  box-shadow: 0 0 6px rgba(0,210,210,0.4);
+}

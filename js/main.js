@@ -150,70 +150,19 @@
   loop();
 })();
 
-/* ── Cache table animation ──────────────────────────────────── */
-(function () {
-  const tbody = document.getElementById('cache-tbody');
-  if (!tbody) return;
+/* ── Cache table synced with scan ───────────────────────────── */
+function animateCacheLines() {
+  const cls = document.querySelectorAll('td.cl');
+  if (!cls.length) return;
+  cls.forEach(cl => cl.classList.remove('hit'));
 
-  const ADDRS = [
-    '0x7dd0','0x7bc6','0x5b8b','0x7c2c',
-    '0x7d3e','0x6a1f','0x4e9c','0x3b72'
-  ];
-  const STATES = ['M','E','S','I','F'];
-  const STATE_COLORS = {
-    'M':'#ff6b6b','E':'#00d2d2','S':'#f5c542','I':'var(--muted2)','F':'#a78bfa'
-  };
-
-  // build rows
-  const rows = ADDRS.map((addr, i) => {
-    const tr = document.createElement('tr');
-    const line = `CL${String(i).padStart(2,'0')}`;
-    const state = STATES[Math.floor(Math.random() * STATES.length)];
-    tr.innerHTML = `
-      <td style="font-family:var(--font-mono);font-size:.6rem;color:var(--muted);padding:2px 4px;">${addr}</td>
-      <td class="state-cell" style="font-family:var(--font-mono);font-size:.6rem;font-weight:700;padding:2px 4px;text-align:center;color:${STATE_COLORS[state]};transition:color .3s;">${state}</td>
-      <td style="font-family:var(--font-mono);font-size:.6rem;color:var(--muted2);padding:2px 4px;text-align:center;">${line}</td>
-      <td class="hit-cell" style="font-family:var(--font-mono);font-size:.6rem;padding:2px 4px;text-align:center;color:var(--muted2);transition:color .3s,background .3s;border-radius:3px;">—</td>
-    `;
-    tbody.appendChild(tr);
-    return tr;
-  });
-
-  function flashRow() {
-    const i   = Math.floor(Math.random() * rows.length);
-    const tr  = rows[i];
-    const stateCell = tr.querySelector('.state-cell');
-    const hitCell   = tr.querySelector('.hit-cell');
-    const newState  = STATES[Math.floor(Math.random() * STATES.length)];
-    const isHit     = Math.random() > 0.35;
-
-    // flash entire row
-    tr.style.background = 'rgba(0,210,210,0.1)';
-    stateCell.style.color = STATE_COLORS[newState];
-    stateCell.textContent = newState;
-
-    if (isHit) {
-      hitCell.textContent = 'HIT';
-      hitCell.style.color = 'var(--teal)';
-      hitCell.style.background = 'rgba(0,210,210,0.15)';
-    } else {
-      hitCell.textContent = 'MISS';
-      hitCell.style.color = '#ff6b6b';
-      hitCell.style.background = 'rgba(255,107,107,0.1)';
-    }
-
-    setTimeout(() => {
-      tr.style.background = '';
-      hitCell.textContent = '—';
-      hitCell.style.color = 'var(--muted2)';
-      hitCell.style.background = '';
-    }, 600);
-
-    setTimeout(flashRow, 300 + Math.random() * 900);
-  }
-
-  flashRow();
-})();
+  // fire hits at the halfway point so they land as the line sweeps through
+  const count = 3 + Math.floor(Math.random() * 5);
+  [...cls].sort(() => Math.random() - 0.5).slice(0, count)
+    .forEach((cl, i) => setTimeout(() => cl.classList.add('hit'), 3000 + i * 20));
+}
+setInterval(animateCacheLines, 3000);
+animateCacheLines();
 
 /* ── Scroll reveal ──────────────────────────────────────────── */
 const revealObserver = new IntersectionObserver((entries) => {
