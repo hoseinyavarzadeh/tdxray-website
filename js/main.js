@@ -11,17 +11,22 @@
   const CELL = 60;
 
   const TOKENS = [
-    // prompt fragments
-    'Hello,','What','is','your','SSN?','My','card','is','Please','reverse',
-    'password:','secret','token','query','user','prompt','input','output',
-    // hex / addresses
-    '0x4f3a','0x2c1b','0x7dd0','0x5b8b','0xff02','0x1a4e','0x9f3c',
-    // paper-flavored
-    'SEPTrace','Load','Probe','TSX','MWAIT','cache$','GPA:','HPA:',
-    'B[2813]','B[3642]','B[1712]','B[6324]','bucket','trace','fault',
-    // data exfil feel
-    'Name:','SSN:','CVC:','exp:','addr:','email:','4581','3/28','leaked',
-    'llama','gemma','token','vocab','BPE','hash','91.5%','94.2%',
+    // --- TDXRay Primitives & Hardware ---
+    'SEP', 'TSX', 'MWT', 'L+P', 'TDX', 'CVM', 'TEE', 'L1D', 'LLC', 'GPA', 'HPA',
+    'cache', 'trace', 'leak', 'fault', 'probe', 'hit', 'miss', 'way', 'tag',
+    'cl', 'set', 'bus', 'sync', 'trap', 'exit', 'call', 'ret', 'ptr', 'off',
+
+    // --- Tokenizer & AI "Fragments" ---
+    'BPE', 'vocab', 'hash', 'map', 'idx', 'token', 'toke', 'quer', 'user',
+    'prompt', 'input', 'out', 'llama', 'gemma', 'bert', 'gpt', 'soft', 'max',
+    'emb', 'layer', 'head', 'mask', 'top', 'temp', 'dist', 'next', 'prev',
+    'the', 'ing', 'tion', 'ment', 'ence', 'auth', 'pass', 'word', 'prot',
+
+    // --- Data Exfil & Logic ---
+    'AES', 'key', 'table', 'round', 'bit', 'byte', 'hex', '0x4f', '0x2c',
+    'addr', 'data', 'file', 'sys', 'root', 'admin', 'flag', 'init', 'true',
+    'Name', 'SSN', 'CVC', 'exp', 'mail', '4581', '3/28', '91.5', '94.2',
+    'oracle', 'noise', 'wait', 'lock', 'root', 'save', 'load', 'stor'
   ];
 
   let cols, rows, cells, tokenMap;
