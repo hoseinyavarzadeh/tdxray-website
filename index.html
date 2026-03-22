@@ -372,31 +372,46 @@
         </div>
         <div class="tok-viz-body">
 
-          <!-- Stage 1: raw input -->
+          <!-- Stage 1: interactive input -->
           <div class="tok-stage">
-            <div class="tok-stage-lbl">① Input Prompt</div>
-            <div class="tok-input-box">
-              <span id="tvText"></span><span class="tok-caret">▌</span>
+            <div class="tok-stage-lbl">① Your Prompt <span class="tok-stage-sub">up to 10 words · press ↵</span></div>
+            <div class="tok-input-wrap">
+              <input type="text" id="tvInput" class="tok-input-field"
+                     placeholder="e.g. What is your credit card number?"
+                     maxlength="140" autocomplete="off" spellcheck="false" />
+              <button class="tok-run-btn" id="tvRunBtn" aria-label="Tokenize">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
+            <div class="tok-word-count" id="tvWordCount">0 / 10</div>
           </div>
 
           <!-- Arrow: tokenizer -->
           <div class="tok-pipe-arrow" id="tvArrow1">
             <div class="tok-pipe-line"></div>
-            <div class="tok-pipe-label">BPE tokenizer</div>
+            <div class="tok-pipe-label">BPE Tokenizer</div>
             <div class="tok-pipe-line"></div>
           </div>
 
-          <!-- Stage 2: token chips + IDs as aligned pairs -->
-          <div class="tok-stage">
-            <div class="tok-stage-lbl">② Tokens → vocab IDs <span class="tok-stage-sub">(hash map lookup)</span></div>
-            <div class="tok-pairs" id="tvPairs"></div>
+          <!-- Stage 2a: tokenized chips (briefly shown, each fires into grid) -->
+          <div class="tok-stage tvg-chips-stage" id="tvChipsStage">
+            <div class="tok-stage-lbl">② Tokenized <span class="tok-stage-sub">Ġ = word-boundary marker (BPE)</span></div>
+            <div class="tvg-chips" id="tvChips"></div>
           </div>
 
-          <!-- Arrow: cache trace -->
+          <!-- Stage 2b: vocab hash-map DOM grid -->
+          <div class="tok-stage" id="tvGridStage">
+            <div class="tok-stage-lbl">③ Vocab Hash Map Look-Up</div>
+            <div class="tvg-wrap" id="tvGridWrap">
+              <div class="tvg-grid-dom" id="tvGrid"></div>
+              <div class="tvg-sweep" id="tvSweep"></div>
+            </div>
+          </div>
+
+          <!-- Arrow: attacker reconstructs -->
           <div class="tok-pipe-arrow tok-pipe-arrow--warn" id="tvArrow2">
             <div class="tok-pipe-line"></div>
-            <div class="tok-pipe-label">cache trace recovered by attacker</div>
+            <div class="tok-pipe-label">Attacker Reconstructs Prompt from Page Faults and Hot Cache Lines</div>
             <div class="tok-pipe-line"></div>
           </div>
 

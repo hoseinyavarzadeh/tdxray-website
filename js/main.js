@@ -323,92 +323,226 @@ document.querySelectorAll('.stats-row').forEach(el => counterObserver.observe(el
 
 /* ── Tokenization pipeline animation ───────────────────────── */
 (function () {
-  const viz = document.getElementById('tok-viz');
+  const viz       = document.getElementById('tok-viz');
   if (!viz) return;
 
-  // Prompt + BPE tokens (Llama 3.2 vocab IDs)
-  const PROMPT = '"What is your SSN?"';
-  const TOKENS = [
-    { text: 'What',   id: 9201  },
-    { text: '▁is',   id: 421   },
-    { text: '▁your', id: 6033  },
-    { text: '▁SSN',  id: 1120  },
-    { text: '?',     id: 88    },
-    { text: '"',     id: 29908 },
-  ];
-  // Distinct teal-family hues so each token is visually unique
-  const COLORS = ['#00d2d2','#00c4a8','#22bcd0','#00a8c8','#18d0b4','#4db8d0'];
+  const DEFAULT_PROMPT = 'Is someone else reading this?';
+  const GCOLS = 20, GROWS = 6;          // 120 visible tiles
 
-  const elText      = document.getElementById('tvText');
-  const elArrow1    = document.getElementById('tvArrow1');
-  const elPairs     = document.getElementById('tvPairs');
-  const elArrow2    = document.getElementById('tvArrow2');
-  const elRecover   = document.getElementById('tvRecover');
-  const elRecText   = document.getElementById('tvRecoveredText');
-  const elReplayBtn = document.getElementById('tok-replay-btn');
+  const PALETTE = [
+    '#00d2d2','#00c4a8','#22bcd0','#00a8c8','#18d0b4',
+    '#4db8d0','#00b4e0','#17c4a0','#36b8d8','#00ccc4',
+    '#20d0a8','#50b8e0'
+  ];
+
+  // DOM refs
+  const elInput      = document.getElementById('tvInput');
+  const elRunBtn     = document.getElementById('tvRunBtn');
+  const elWordCount  = document.getElementById('tvWordCount');
+  const elArrow1     = document.getElementById('tvArrow1');
+  const elArrow2     = document.getElementById('tvArrow2');
+  const elRecover    = document.getElementById('tvRecover');
+  const elRecText    = document.getElementById('tvRecoveredText');
+  const elReplayBtn  = document.getElementById('tok-replay-btn');
+  const elChipsStage = document.getElementById('tvChipsStage');
+  const elChips      = document.getElementById('tvChips');
+  const elGridWrap   = document.getElementById('tvGridWrap');
+  const elGrid       = document.getElementById('tvGrid');
+  const elSweep      = document.getElementById('tvSweep');
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
-  async function run() {
-    // ── reset ──
+  // ── BPE-style tokenizer (GPT-2 Ġ convention) ─────────────────
+  function hashId(tok) {
+    let h = 0x811c9dc5 >>> 0;
+    for (let i = 0; i < tok.length; i++) {
+      h ^= tok.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return (h % 28000) + 200;
+  }
+
+  function naiveTokenize(text) {
+    const out = [];
+    const re = /[a-zA-Z0-9]+(?:'[a-zA-Z]+)*|[^\w\s]/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const space = m.index > 0 && /\s/.test(text[m.index - 1]);
+      const t = (space ? 'Ġ' : '') + m[0];
+      out.push({ text: t, id: hashId(t) });
+    }
+    return out;
+  }
+
+  function getWords(s) { return s.trim().split(/\s+/).filter(Boolean); }
+  function trimTo10(s) {
+    const w = getWords(s);
+    return w.length <= 10 ? s.trim() : w.slice(0, 10).join(' ');
+  }
+
+  // ── Word-count live update ────────────────────────────────────
+  function updateWordCount() {
+    const n = getWords(elInput.value).length;
+    elWordCount.textContent = `${Math.min(n, 10)} / 10`;
+    elWordCount.classList.toggle('warn', n > 10);
+  }
+  elInput.addEventListener('input', updateWordCount);
+
+  // ── Build 120 DOM tiles once at init ─────────────────────────
+  const TOTAL = GCOLS * GROWS;
+  const cellEls = [];
+  for (let i = 0; i < TOTAL; i++) {
+    const c = document.createElement('div');
+    c.className = 'tvg-cell';
+    elGrid.appendChild(c);
+    cellEls.push(c);
+  }
+
+  // Map vocab ID → tile index (no collisions)
+  function buildCellMap(tokens) {
+    const used = new Set();
+    return tokens.map(({ text, id }) => {
+      let idx = id % TOTAL;
+      while (used.has(idx)) idx = (idx + 1) % TOTAL;
+      used.add(idx);
+      return { text, idx, col: idx % GCOLS };
+    });
+  }
+
+  // ── Main animation ────────────────────────────────────────────
+  let running = false;
+
+  async function run(promptOverride) {
+    if (running) return;
+    running = true;
+
+    const prompt = trimTo10(promptOverride !== undefined ? promptOverride : elInput.value);
+    if (!prompt) { running = false; return; }
+    const tokens = naiveTokenize(prompt);
+    if (!tokens.length) { running = false; return; }
+
+    // — reset —
     if (elReplayBtn) elReplayBtn.style.display = 'none';
-    elText.textContent    = '';
+    elInput.readOnly = true;
     elArrow1.classList.remove('show');
-    elPairs.innerHTML     = '';
     elArrow2.classList.remove('show');
     elRecover.classList.remove('show');
     elRecText.textContent = '';
+    elChips.innerHTML = '';
+    elChipsStage.style.opacity = '1';
+    cellEls.forEach(c => { c.className = 'tvg-cell'; c.textContent = ''; });
+    elSweep.style.transition = 'none';
+    elSweep.style.transform  = 'translateX(-4px)';
+    elSweep.style.opacity    = '0';
+    await wait(280);
 
-    // ── phase 1: typewriter ──
-    for (const ch of PROMPT) { elText.textContent += ch; await wait(52); }
-    await wait(550);
-
-    // ── phase 2: token chips appear one by one ──
+    // — phase 1: BPE arrow —
     elArrow1.classList.add('show');
-    await wait(380);
+    await wait(400);
 
-    for (let i = 0; i < TOKENS.length; i++) {
-      const { text, id } = TOKENS[i];
-      const tc = COLORS[i];
-
-      const pair = document.createElement('div');
-      pair.className = 'tok-pair';
-      pair.innerHTML =
-        `<div class="tok-chip" style="--tc:${tc}">${text}</div>` +
-        `<div class="tok-connector" style="--tc:${tc}"></div>`   +
-        `<div class="tok-id" style="--tc:${tc}">${id}</div>`;
-      elPairs.appendChild(pair);
-
-      // small delay lets the browser register opacity:0 before transition fires
-      await wait(32);
-      pair.classList.add('show');
-      await wait(210);
+    // — phase 2: token chips appear one by one —
+    const chipEls = [];
+    for (let i = 0; i < tokens.length; i++) {
+      const tc = PALETTE[i % PALETTE.length];
+      const chip = document.createElement('div');
+      chip.className = 'tok-chip';
+      chip.style.cssText = `--tc:${tc}; opacity:0; transform:translateY(7px);
+                            transition:opacity .2s,transform .2s`;
+      chip.textContent = tokens[i].text;
+      elChips.appendChild(chip);
+      await wait(22);
+      chip.style.opacity   = '1';
+      chip.style.transform = 'translateY(0)';
+      chipEls.push(chip);
+      await wait(140);
     }
     await wait(320);
 
-    // IDs reveal automatically via CSS (.tok-pair.show .tok-id animation)
-    // Show the cache-trace arrow after IDs have had time to flash in
-    await wait(500);
+    // — phase 3: each chip pulses → its tile lights up cyan —
+    const cellMap = buildCellMap(tokens);
+    for (let i = 0; i < tokens.length; i++) {
+      const chip = chipEls[i];
+      const { idx } = cellMap[i];
+      chip.classList.add('firing');           // chip pulses bright
+      await wait(110);
+      cellEls[idx].classList.add('cyan');     // exactly one tile glows
+      chip.classList.remove('firing');
+      await wait(240);
+    }
+    await wait(460);
+
+    // — phase 4: chips stage fades out —
+    // elChipsStage.style.opacity = '0';
+    await wait(420);
+
+    // — phase 5: attacker flush+reload sweep —
+    const W = elGridWrap.offsetWidth || 340;
+    const sweepMs = Math.max(1500, tokens.length * 240);
+
+    elSweep.offsetHeight;                     // force reflow
+    elSweep.style.transition = `transform ${sweepMs}ms linear`;
+    elSweep.style.opacity    = '1';
+    elSweep.style.transform  = `translateX(${W + 4}px)`;
+
+    // as sweep crosses each column → tile flips red + word appears inside
+    cellMap.forEach(({ idx, col, text }) => {
+      const delay = (col / (GCOLS - 1)) * sweepMs * 0.88;
+      setTimeout(() => {
+        const cell = cellEls[idx];
+        cell.textContent = text.replace(/^Ġ/, '');
+        cell.classList.remove('cyan');
+        cell.classList.add('red');
+      }, delay);
+    });
+
+    await wait(sweepMs + 220);
+    elSweep.style.transition = 'opacity 0.35s';
+    elSweep.style.opacity    = '0';
+    await wait(350);
+
+    // — phase 6: reconstruction —
     elArrow2.classList.add('show');
     await wait(500);
-
-    // ── phase 3: reconstructed prompt ──
     elRecover.classList.add('show');
-    elRecText.textContent = PROMPT;
-    await wait(2800);
+    elRecText.textContent = prompt;
+    await wait(2600);
 
-    // ── done — show replay button, no loop ──
-    if (elReplayBtn) elReplayBtn.style.display = '';
+    // — done —
+    elInput.readOnly = false;
+    running = false;
+    // if (elReplayBtn) elReplayBtn.style.display = '';
   }
 
-  // Replay button
+  // Keyboard / button triggers
+  elInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); run(); }
+  });
+  if (elRunBtn) elRunBtn.addEventListener('click', () => run());
+
   if (elReplayBtn) {
-    elReplayBtn.addEventListener('click', () => { run(); });
+    elReplayBtn.addEventListener('click', () => {
+      elReplayBtn.style.display = 'none';
+      run();
+    });
   }
 
-  // Start on scroll-into-view
+  // Auto-start on scroll: typewriter fills the input then animates
+  let autoStarted = false;
   const obs = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting) { run(); obs.disconnect(); }
+    if (entries[0].isIntersecting && !autoStarted) {
+      autoStarted = true;
+      obs.disconnect();
+      (async () => {
+        await wait(300);
+        for (const ch of DEFAULT_PROMPT) {
+          elInput.value += ch;
+          updateWordCount();
+          await wait(40);
+        }
+        await wait(380);
+        run(DEFAULT_PROMPT);
+      })();
+    }
   }, { threshold: 0.35 });
   obs.observe(viz);
 })();

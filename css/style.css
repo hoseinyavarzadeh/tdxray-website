@@ -695,20 +695,50 @@ section { padding: 6rem 2rem; }
 }
 .tok-stage-sub { color: var(--muted2); font-weight: 400; letter-spacing: .05em; text-transform: none; }
 
-/* input box */
-.tok-input-box {
+/* interactive input */
+.tok-input-wrap {
+  display: flex; align-items: center; gap: .5rem;
+}
+.tok-input-field {
+  flex: 1;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: .55rem .9rem;
   font-family: var(--font-mono); font-size: .9rem;
-  color: var(--white); min-height: 2.3rem; letter-spacing: .03em;
+  color: var(--white); letter-spacing: .03em;
+  outline: none; transition: border-color .2s, box-shadow .2s;
 }
-.tok-caret {
-  color: var(--teal); font-weight: 300;
-  animation: tokCaretBlink .9s step-end infinite;
+.tok-input-field::placeholder { color: var(--muted2); }
+.tok-input-field:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0,210,210,0.12);
 }
-@keyframes tokCaretBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+.tok-input-field:read-only { opacity: .75; cursor: default; }
+.tok-run-btn {
+  flex-shrink: 0;
+  width: 2.3rem; height: 2.3rem;
+  border-radius: 8px;
+  background: var(--teal-faint);
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  cursor: pointer;
+  display: grid; place-items: center;
+  transition: background .2s, box-shadow .2s;
+}
+.tok-run-btn:hover {
+  background: rgba(0,210,210,0.2);
+  box-shadow: 0 0 14px rgba(0,210,210,0.3);
+}
+.tok-word-count {
+  font-family: var(--font-mono); font-size: .63rem;
+  color: var(--muted2); letter-spacing: .08em;
+  margin-top: .25rem; text-align: right;
+}
+.tok-word-count.warn { color: var(--red); }
+[data-theme="light"] .tok-input-field {
+  background: rgba(0,0,0,0.04); color: var(--text);
+}
 
 /* arrows */
 .tok-pipe-arrow {
@@ -762,6 +792,141 @@ section { padding: 6rem 2rem; }
   40%  { opacity: 1; text-shadow: 0 0 16px var(--tc); }
   100% { opacity: 1; text-shadow: 0 0 5px color-mix(in srgb, var(--tc) 25%, transparent); }
 }
+
+/* cache line address chip — appears after the vocab ID */
+.tok-connector--sm {
+  width: 1px; height: 8px;
+  background: rgba(255, 100, 120, 0.3);
+}
+.tok-cache {
+  font-family: var(--font-mono); font-size: .7rem; font-weight: 600;
+  background: rgba(255, 79, 106, 0.1);
+  border: 1px solid rgba(255, 79, 106, 0.28);
+  border-radius: 4px;
+  padding: .12rem .42rem;
+  color: #ff8fa3;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  opacity: 0;
+}
+.tca-dot { opacity: 0.45; }
+/* reveals 580ms after parent pair pops in (after the vocab ID at 280ms) */
+.tok-pair.show .tok-cache {
+  animation: tokCacheReveal .55s ease 0.58s both;
+}
+@keyframes tokCacheReveal {
+  0%   { opacity: 0; transform: translateY(4px); }
+  50%  { opacity: 1; transform: translateY(0); box-shadow: 0 0 10px rgba(255,79,106,0.45); }
+  100% { opacity: 1; transform: translateY(0); box-shadow: 0 0 3px rgba(255,79,106,0.15); }
+}
+
+/* ── Vocab hash-map grid visualization ──────────────────────── */
+
+/* chips stage — fades out after tokens fire into the grid */
+.tvg-chips-stage { transition: opacity 0.45s; }
+.tvg-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* chip "fire" pulse when it triggers a cell lookup */
+@keyframes chipFire {
+  0%   { transform: scale(1);    filter: brightness(1);   }
+  45%  { transform: scale(1.22); filter: brightness(1.9); }
+  100% { transform: scale(1);    filter: brightness(1);   }
+}
+.tok-chip.firing { animation: chipFire .32s ease both; }
+
+/* grid wrapper */
+.tvg-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 4px;
+}
+
+/* DOM cell grid — many small tiles */
+.tvg-grid-dom {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 2px;
+}
+.tvg-cell {
+  height: 20px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.055);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: 0;           /* text hidden until red */
+  color: transparent;
+  letter-spacing: -0.02em;
+  transition: background .3s, border-color .3s, box-shadow .3s,
+              font-size .25s, color .25s;
+}
+.tvg-cell.cyan {
+  background: rgba(0, 210, 228, 0.42);
+  border-color: rgba(0, 228, 238, 0.72);
+  box-shadow: 0 0 8px rgba(0, 222, 238, 0.65),
+              inset 0 0 5px rgba(0, 222, 238, 0.25);
+}
+.tvg-cell.red {
+  background: rgba(255, 75, 105, 0.42);
+  border-color: rgba(255, 90, 118, 0.72);
+  box-shadow: 0 0 8px rgba(255, 79, 106, 0.6),
+              inset 0 0 5px rgba(255, 79, 106, 0.25);
+  font-size: 0.42rem;
+  color: rgba(255, 215, 222, 0.93);
+}
+
+/* sweep line */
+.tvg-sweep {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 3px;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(255, 85, 110, 0.35) 20%,
+    rgba(255, 79, 106, 0.95) 50%,
+    rgba(255, 85, 110, 0.35) 80%,
+    transparent 100%);
+  box-shadow: 0 0 14px rgba(255, 79, 106, 0.7), 0 0 5px rgba(255, 79, 106, 1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* legend row */
+.tvg-legend {
+  display: flex; align-items: center; gap: .55rem;
+  margin-top: .45rem;
+  font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: .07em; opacity: .65;
+}
+.tvgl-cyan { color: #00d4dc; }
+.tvgl-red  { color: #ff8fa3; }
+.tvgl-sep  { color: var(--muted2); }
+
+/* light theme */
+[data-theme="light"] .tvg-wrap { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .tvg-cell { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.09); }
+[data-theme="light"] .tvg-cell.red { color: #8a0020; }
+
+/* legacy — kept for safety */
+/* legend under the pairs */
+.tok-cache-legend {
+  display: flex; align-items: center; gap: .5rem;
+  margin-top: .55rem;
+  font-family: var(--font-mono); font-size: .62rem; letter-spacing: .07em;
+  opacity: 0.65;
+}
+.tcl-teal { color: var(--teal); }
+.tcl-red  { color: #ff8fa3; }
+.tcl-sep  { color: var(--muted2); }
+[data-theme="light"] .tok-cache {
+  background: rgba(200, 20, 50, 0.07);
+  border-color: rgba(200, 20, 50, 0.22);
+  color: #c0003a;
+}
+[data-theme="light"] .tcl-red { color: #c0003a; }
 
 /* recovered box */
 .tok-stage--recovered {
