@@ -3,12 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TDXRay — Microarchitectural Side-Channel Analysis of Intel TDX</title>
-  <meta name="description" content="TDXRay is a host-side measurement framework that produces highly accurate, cache-line-granular memory access traces of unmodified confidential VMs running inside Intel TDX." />
-  <meta property="og:title" content="TDXRay" />
-  <meta property="og:description" content="Microarchitectural Side-Channel Analysis of Intel TDX for Real-World Workloads" />
-  <meta property="og:image" content="img/logo.png" />
-
+  <title>TDXRay</title>
   <link rel="icon" type="image/png" href="img/logo.png" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -19,8 +14,12 @@
 ═══════════════════════════════════════════════════════════════ -->
 <nav>
   <div class="nav-logo">
-    <img src="img/logo.png" alt="TDXRay logo" />
-    <span>TDX<em>Ray</em></span>
+    <a href="#">
+      <img src="img/logo.png" alt="TDXRay logo" />
+    </a>
+    <a href="#">
+      <span>TDX<em>Ray</em></span>
+    </a>
   </div>
   <ul class="nav-links">
     <li><a href="#explainer">Overview</a></li>
@@ -54,15 +53,9 @@
 
     <img src="img/logo.png" alt="TDXRay" class="hero-logo" />
 
-    <!-- <h1 class="hero-title">TDX<span class="accent">Ray</span></h1> -->
-
-    <p class="hero-sub">
-      Microarchitectural Side-Channel Analysis of Intel TDX for Real-World Workloads
-    </p>
-
     <p class="hero-authors">
-      <span>Tristan Hornetz</span><span style="color: yellow;">*</span> &nbsp;·&nbsp;
-      <span>Hosein Yavarzadeh</span><span style="color: yellow;">*</span>
+      <span>Tristan Hornetz</span><span style="color: rgb(0, 203, 210);"> *</span> &nbsp;·&nbsp;
+      <span>Hosein Yavarzadeh</span><span style="color: rgb(0, 203, 210);"> *</span>
       <br/>
       <span>Albert Cheu</span> &nbsp;·&nbsp;
       <span>Adria Gascon</span> &nbsp;·&nbsp;
@@ -72,7 +65,8 @@
       <span>Phillipp Schoppmann</span> &nbsp;·&nbsp;
       <span>Michael Schwarz</span> &nbsp;·&nbsp;
       <span>Ruiyi Zhang</span>
-      <br><span style="color: yellow;">*</span> <span style="font-size:.75rem;color:var(--muted2);">Equal contribution joint first authors</span></span>
+      <br><br>
+      <span style="color: rgb(0, 203, 210);">*</span> <span style="font-size:.75rem;color:var(--muted2);">Equal contribution joint first authors</span></span>
     </p>
 
     <div class="hero-actions">
@@ -91,11 +85,6 @@
     </div>
 
   </div>
-
-  <!-- <div class="hero-scroll">
-    <div class="scroll-line"></div>
-    <span>Scroll</span>
-  </div> -->
 </section>
 
 
@@ -184,10 +173,10 @@
   <div class="container">
 
     <div class="reveal">
-      <p class="section-label">Four New Side-Channel Primitives in TDX</p>
+      <p class="section-label">Four Side-Channel Primitives in TDX</p>
       <h2 class="section-title">How TDXRay Sees<br/>Through Encryption</h2>
       <p class="section-intro">
-        We exploit four host-observable signals in Intel TDX. Each exploits a different shared resource — together they cover everything from page-level to 64-byte cache-line granularity.
+        We exploit four host-observable signals in Intel TDX. Each exploits a different shared resource — together they cover everything from page-level to cache-line granularity.
       </p>
     </div>
 
@@ -259,7 +248,7 @@
         <div class="flow-diagram">
           <div class="flow-label">Untrusted Host (VMM)</div>
           <div class="flow-row">
-            <div class="flow-box host">Block(T) via seamcall</div>
+            <div class="flow-box host">Block Victim Pages via seamcall</div>
           </div>
           <div style="text-align:center;color:var(--muted2);font-size:1.2rem;">↓</div>
           <div class="flow-row">
@@ -371,60 +360,61 @@
         <p style="font-size:.9rem;color:var(--muted);line-height:1.75;">
           Critically, this attack happens entirely on the <strong style="color:var(--white);">CPU during tokenization</strong> — before inference even begins — meaning GPU confidentiality offers no protection.
         </p>
-
-        <div style="display:flex;flex-direction:column;gap:.7rem;margin-top:1.5rem;">
-          <div style="display:flex;align-items:center;gap:.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;">
-            <div style="width:32px;height:32px;border-radius:8px;background:var(--teal-faint);border:1px solid var(--border-mid);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);font-weight:700;">1</div>
-            <div>
-              <div style="font-size:.85rem;font-weight:600;margin-bottom:.15rem;">Offline: Binary Analysis</div>
-              <div style="font-size:.78rem;color:var(--muted);">Analyze the victim binary to find token hash map layout in virtual memory.</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;">
-            <div style="width:32px;height:32px;border-radius:8px;background:var(--teal-faint);border:1px solid var(--border-mid);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);font-weight:700;">2</div>
-            <div>
-              <div style="font-size:.85rem;font-weight:600;margin-bottom:.15rem;">Online: Locate Token Pages</div>
-              <div style="font-size:.78rem;color:var(--muted);">Send crafted prompts to map token positions to physical pages. One-time setup.</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;">
-            <div style="width:32px;height:32px;border-radius:8px;background:var(--teal-faint);border:1px solid var(--border-mid);display:grid;place-items:center;flex-shrink:0;font-family:var(--font-mono);font-size:.8rem;color:var(--teal);font-weight:700;">3</div>
-            <div>
-              <div style="font-size:.85rem;font-weight:600;margin-bottom:.15rem;">Per Prompt: Trace &amp; Reconstruct</div>
-              <div style="font-size:.78rem;color:var(--muted);">Record cache-line-granular trace during tokenization → decode tokens → recover prompt verbatim.</div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- terminal output -->
-      <div>
-        <div class="terminal" id="typewriter">
-          <div class="terminal-bar">
-            <div class="terminal-dot"></div>
-            <div class="terminal-dot"></div>
-            <div class="terminal-dot"></div>
-            <span class="terminal-title">tdxray — prompt exfiltration</span>
+      <!-- tokenization pipeline visualization -->
+      <div class="tok-viz" id="tok-viz">
+        <div class="tok-viz-bar">
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <span class="terminal-title">tokenizer · llama.cpp · BPE vocab</span>
+        </div>
+        <div class="tok-viz-body">
+
+          <!-- Stage 1: raw input -->
+          <div class="tok-stage">
+            <div class="tok-stage-lbl">① Input Prompt</div>
+            <div class="tok-input-box">
+              <span id="tvText"></span><span class="tok-caret">▌</span>
+            </div>
           </div>
-          <div class="terminal-body">
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="prompt">$</span> <span class="normal">./tdxray --target llama3.2 --mode trace</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment"># TDXRay v1.0 — monitoring tokenizer pages</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment"># Target: llama.cpp · Llama 3.2 (128K tokens)</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[+] Monitoring 2,175 token pages…</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[+] Victim tokenizing prompt…</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">--- Recovered tokens (raw) ---</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="leaked">B[2813][1]:"Hello" B[3642][2]:"_World" B[1405][0]:"!" </span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="leaked">B[9201][1]:"_What" B[421][0]:"_is" B[6033][1]:"_your"</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="leaked">B[1120][0]:"_SSN" B[88][1]:"?" </span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">--- Reconstructed prompt ---</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="success">→ "Hello World! What is your SSN?"</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s">&nbsp;</div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[✓] Similarity score: 100.0%</span></div>
-            <div class="tw-line" style="opacity:0;transition:opacity .3s"><span class="comment">[✓] Latency overhead: 62.1ms (imperceptible)</span></div>
+
+          <!-- Arrow: tokenizer -->
+          <div class="tok-pipe-arrow" id="tvArrow1">
+            <div class="tok-pipe-line"></div>
+            <div class="tok-pipe-label">BPE tokenizer</div>
+            <div class="tok-pipe-line"></div>
           </div>
+
+          <!-- Stage 2: token chips + IDs as aligned pairs -->
+          <div class="tok-stage">
+            <div class="tok-stage-lbl">② Tokens → vocab IDs <span class="tok-stage-sub">(hash map lookup)</span></div>
+            <div class="tok-pairs" id="tvPairs"></div>
+          </div>
+
+          <!-- Arrow: cache trace -->
+          <div class="tok-pipe-arrow tok-pipe-arrow--warn" id="tvArrow2">
+            <div class="tok-pipe-line"></div>
+            <div class="tok-pipe-label">cache trace recovered by attacker</div>
+            <div class="tok-pipe-line"></div>
+          </div>
+
+          <!-- Stage 3: reconstructed prompt -->
+          <div class="tok-stage tok-stage--recovered" id="tvRecover">
+            <div class="tok-stage-lbl">③ Reconstructed Prompt</div>
+            <div class="tok-recovered-box">
+              <span class="tok-rec-arrow">→</span>
+              <span id="tvRecoveredText"></span>
+            </div>
+          </div>
+
+          <!-- Replay button (shown after animation completes) -->
+          <button class="tok-replay-btn" id="tok-replay-btn" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+            Replay
+          </button>
+
         </div>
       </div>
     </div>
@@ -433,24 +423,20 @@
     <div id="demo" class="reveal">
       <div class="divider-label"><span>Video Demo</span></div>
       <div class="demo-video-wrap">
-        <!--
-          REPLACE THIS SECTION WITH YOUR VIDEO.
-          Option A — local video file:
-            <video controls poster="img/demo-poster.jpg">
-              <source src="assets/demo.mp4" type="video/mp4">
-            </video>
-          Option B — YouTube embed:
-            <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
-              allowfullscreen allow="autoplay; encrypted-media"></iframe>
-          Then remove the .demo-placeholder div below.
-        -->
-        <div class="demo-placeholder">
-          <div class="play-btn" onclick="alert('Replace this with your video embed. See the HTML comment above.')">
+        <canvas id="demo-canvas" class="demo-layer"></canvas>
+        <img    id="demo-gif"    class="demo-layer" src="" alt="TDXRay demo" />
+        <div class="demo-overlay" id="demo-overlay">
+          <div class="play-btn" id="demo-play-btn">
             <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           </div>
-          <p>Demo Video — Replace with your embed</p>
-          <p style="font-size:.65rem;margin-top:.25rem;color:var(--muted2);">See HTML comment in source for instructions</p>
+          <p>Watch Demo</p>
         </div>
+        <button class="demo-replay-btn" id="demo-replay-btn">
+          <div class="play-btn">
+            <svg viewBox="0 0 24 24" fill="var(--bg)" style="width:24px;height:24px"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          </div>
+          <p>Replay</p>
+        </button>
       </div>
     </div>
 
@@ -486,28 +472,10 @@
         <p>TDXRay leaves observable microarchitectural footprints: inflated page fault rates and elevated cache miss counts. A monitor inside the confidential VM can track these performance counters and detect when monitoring is occurring. TDX supports virtualized performance counters, making this practical.</p>
       </div>
 
-      <div class="mit-card reveal" style="transition-delay:.15s">
-        <div class="mit-icon">🚧</div>
-        <h3>Restrict Block/Unblock API</h3>
-        <p>SEPTrace is only possible because TDX exposes page block/unblock APIs for live migration. Many static workloads don't need this. Future TDX versions could provide a guest-configurable option to disable these APIs for critical memory regions, eliminating SEPTrace entirely.</p>
-      </div>
-
       <div class="mit-card reveal" style="transition-delay:.2s">
         <div class="mit-icon">🏷️</div>
         <h3>HKID-Aware Cache Tags</h3>
         <p>Load+Probe and TSX-Probe work because the cache coherence protocol doesn't distinguish cache lines with identical physical addresses but different encryption key IDs (HKIDs). Incorporating HKID into cache tags would allow these lines to coexist, eliminating the conflict-based timing signal.</p>
-      </div>
-
-      <div class="mit-card reveal" style="transition-delay:.25s">
-        <div class="mit-icon">⚡</div>
-        <h3>Forced Alias Cache Misses</h3>
-        <p>As an alternative hardware fix, accesses to physical aliases of TDX private memory could be forced to always behave as cache misses or trigger hardware faults — removing the attacker's ability to distinguish cached vs. uncached states through alias addresses.</p>
-      </div>
-
-      <div class="mit-card reveal" style="transition-delay:.3s">
-        <div class="mit-icon">🔀</div>
-        <h3>Randomized Hash Functions</h3>
-        <p>If the tokenizer's hash function used a runtime-generated secret seed, the mapping from strings to bucket IDs would be unpredictable to the attacker. This prevents recovering which token was accessed from a given bucket traversal — though it doesn't address all access-pattern leakage.</p>
       </div>
 
     </div>
@@ -530,7 +498,7 @@
           <span style="font-family:var(--font-mono);font-size:.7rem;color:var(--muted2);letter-spacing:.1em;">BIBTEX</span>
           <button id="copy-bibtex" style="background:var(--teal-faint);border:1px solid var(--border-mid);color:var(--teal);font-family:var(--font-mono);font-size:.72rem;padding:.3rem .8rem;border-radius:6px;cursor:pointer;transition:background .2s;">Copy BibTeX</button>
         </div>
-        <pre id="bibtex-content" style="padding:1.5rem;font-family:var(--font-mono);font-size:.82rem;color:#b0cce0;line-height:1.8;overflow-x:auto;white-space:pre-wrap;">@inproceedings{Hornetz2026TDXRay,
+        <pre id="bibtex-content" style="padding:1.5rem;font-family:var(--font-mono);font-size:.82rem;color:#b0cce0;line-height:1.8;overflow-x:auto;white-space:pre-wrap;">@inproceedings{TDXRay,
   title     = {{TDXRay}: Microarchitectural Side-Channel Analysis of
                Intel {TDX} for Real-World Workloads},
   author    = {Hornetz, Tristan and Yavarzadeh, Hosein and Cheu, Albert
@@ -595,7 +563,7 @@
           Has Intel been notified?
           <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="faq-a">Yes. We followed responsible disclosure and notified Intel and major vendors that publicly rely on confidential computing for private inference — including Apple, Anthropic, Google, Microsoft, Meta, and OpenAI — in November 2025. We are currently awaiting their responses.</div>
+        <div class="faq-a">Yes. We followed responsible disclosure and notified Intel and major vendors that publicly rely on confidential computing for private inference — including Apple, Anthropic, Google, Microsoft, Meta, and OpenAI — in November 2025.</div>
       </div>
 
       <div class="faq-item">
@@ -604,14 +572,6 @@
           <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="faq-a">We evaluated TDXRay on three TDX-enabled Intel Xeon processors: Xeon Silver 4510 (Sapphire Rapids), Xeon Gold 6526Y (Emerald Rapids), and Xeon 6736P (Granite Rapids). All three are affected. These represent the current generation of Intel server CPUs that support TDX.</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q">
-          Is the code available?
-          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="faq-a">We will release TDXRay and all evaluation artifacts upon paper acceptance to support reproducibility and ongoing assessment of confidential computing platforms.</div>
       </div>
 
     </div>
@@ -633,58 +593,58 @@
 
     <div class="team-grid reveal">
 
-      <div class="team-card">
-        <div class="team-avatar">TH</div>
-        <h4><a href="#">Tristan Hornetz</a><sup style="color:var(--teal);font-size:.65rem;">*</sup></h4>
-        <p>CISPA</p>
+      <div class="team-row">
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/tristan.jpg" alt="Tristan Hornetz" />
+          <h4><a href="https://cispa.de/en/people/c01trho">Tristan Hornetz</a><sup style="color:var(--teal);font-size:.65rem;"> *</sup></h4>
+          <p>CISPA</p>
+        </div>
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/hosein.jpg" alt="Hosein Yavarzadeh" />
+          <h4><a href="https://cpusec.org">Hosein Yavarzadeh</a><sup style="color:var(--teal);font-size:.65rem;"> *</sup></h4>
+          <p>UC San Diego/Google</p>
+        </div>
       </div>
 
-      <div class="team-card">
-        <div class="team-avatar">HY</div>
-        <h4><a href="#">Hosein Yavarzadeh</a><sup style="color:var(--teal);font-size:.65rem;">*</sup></h4>
-        <p>UC San Diego</p>
+      <div class="team-row">
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/albert.jpg" alt="Albert Cheu" />
+          <h4><a href="https://albertcheu.com">Albert Cheu</a></h4>
+          <p>Google</p>
+        </div>
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/adria.jpg" alt="Adria Gascon" />
+          <h4><a href="https://scholar.google.com/citations?user=M1FQ49sAAAAJ&hl=en&oi=ao">Adria Gascon</a></h4>
+          <p>Google</p>
+        </div>
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/lukas.jpg" alt="Lukas Gerlach" />
+          <h4><a href="https://lukasgerlach.me">Lukas Gerlach</a></h4>
+          <p>CISPA</p>
+        </div>
       </div>
 
-      <div class="team-card">
-        <div class="team-avatar">AC</div>
-        <h4><a href="#">Albert Cheu</a></h4>
-        <p>Google</p>
-      </div>
-
-      <div class="team-card">
-        <div class="team-avatar">AG</div>
-        <h4><a href="#">Adria Gascon</a></h4>
-        <p>Google</p>
-      </div>
-
-      <div class="team-card">
-        <div class="team-avatar">LG</div>
-        <h4><a href="#">Lukas Gerlach</a></h4>
-        <p>CISPA</p>
-      </div>
-
-      <div class="team-card">
-        <div class="team-avatar">DM</div>
-        <h4><a href="#">Daniel Moghimi</a></h4>
-        <p>Google</p>
-      </div>
-
-      <div class="team-card">
-        <div class="team-avatar">PS</div>
-        <h4><a href="#">Phillipp Schoppmann</a></h4>
-        <p>Google</p>
-      </div>
-
-      <div class="team-card">
-        <div class="team-avatar">MS</div>
-        <h4><a href="#">Michael Schwarz</a></h4>
-        <p>CISPA</p>
-      </div>
-
-      <div class="team-card">
-        <div class="team-avatar">RZ</div>
-        <h4><a href="#">Ruiyi Zhang</a></h4>
-        <p>CISPA</p>
+      <div class="team-row">
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/daniel.jpg" alt="Daniel Moghimi" />
+          <h4><a href="https://moghimi.org">Daniel Moghimi</a></h4>
+          <p>Google</p>
+        </div>
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/philip.jpg" alt="Phillipp Schoppmann" />
+          <h4><a href="https://research.google/people/phillippschoppmann/?&type=google">Phillipp Schoppmann</a></h4>
+          <p>Google</p>
+        </div>
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/michael.jpg" alt="Michael Schwarz" />
+          <h4><a href="https://misc0110.net">Michael Schwarz</a></h4>
+          <p>CISPA</p>
+        </div>
+        <div class="team-card">
+          <img class="team-avatar" src="img/team/ruiyi.jpg" alt="Ruiyi Zhang" />
+          <h4><a href="https://zhangruiyi.me">Ruiyi Zhang</a></h4>
+          <p>CISPA</p>
+        </div>
       </div>
 
     </div>
@@ -708,7 +668,7 @@
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#team">Authors</a></li>
     </ul>
-    <p class="footer-copy">© 2026 The TDXRay Authors</p>
+    <p class="footer-copy">© 2026 Hosein Yavarzadeh</p>
   </div>
 </footer>
 

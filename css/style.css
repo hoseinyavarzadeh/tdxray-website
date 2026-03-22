@@ -201,10 +201,10 @@ nav {
 }
 
 .hero-logo {
-  width: 350px; height: 350px;
+  width: 400px; height: 400px;
   margin: 0 auto 1.8rem;
   object-fit: contain;
-  filter: drop-shadow(0 0 30px rgba(0,210,210,0.5));
+  filter: drop-shadow(0 0 60px rgba(0, 210, 210, 0.776));
   animation: fadeUp .7s .1s ease both;
 }
 
@@ -266,13 +266,18 @@ nav {
   opacity: 1;
 }
 .btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border-mid);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   color: var(--white);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.25);
 }
 .btn-ghost:hover {
+  background: rgba(0, 210, 210, 0.10);
   border-color: var(--teal);
   color: var(--teal);
+  box-shadow: inset 0 1px 0 rgba(0,210,210,0.12), 0 0 18px rgba(0,210,210,0.18);
   opacity: 1;
 }
 .btn svg { width: 14px; height: 14px; }
@@ -663,6 +668,151 @@ section { padding: 6rem 2rem; }
 .terminal-body .leaked { color: var(--red); }
 .terminal-body .normal { color: #b0cce0; }
 
+/* ── Tokenization Pipeline Viz ──────────────────────────────── */
+.tok-viz {
+  background: var(--bg-terminal);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.tok-viz-bar {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .65rem 1rem;
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid var(--border);
+}
+.tok-viz-body {
+  padding: 1.4rem 1.5rem 1.8rem;
+  display: flex; flex-direction: column; gap: 1.1rem;
+}
+
+/* stages */
+.tok-stage { display: flex; flex-direction: column; gap: .5rem; }
+.tok-stage-lbl {
+  font-family: var(--font-mono); font-size: .63rem;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--muted2);
+}
+.tok-stage-sub { color: var(--muted2); font-weight: 400; letter-spacing: .05em; text-transform: none; }
+
+/* input box */
+.tok-input-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .55rem .9rem;
+  font-family: var(--font-mono); font-size: .9rem;
+  color: var(--white); min-height: 2.3rem; letter-spacing: .03em;
+}
+.tok-caret {
+  color: var(--teal); font-weight: 300;
+  animation: tokCaretBlink .9s step-end infinite;
+}
+@keyframes tokCaretBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* arrows */
+.tok-pipe-arrow {
+  display: flex; align-items: center; gap: .55rem;
+  opacity: 0; transform: translateY(-3px);
+  transition: opacity .3s, transform .3s;
+}
+.tok-pipe-arrow.show { opacity: 1; transform: translateY(0); }
+.tok-pipe-line { flex: 1; height: 1px; background: var(--border-mid); }
+.tok-pipe-label {
+  font-family: var(--font-mono); font-size: .63rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--teal); white-space: nowrap;
+}
+.tok-pipe-arrow--warn .tok-pipe-line { background: rgba(255,79,106,0.25); }
+.tok-pipe-arrow--warn .tok-pipe-label { color: var(--red); }
+
+/* pairs grid */
+.tok-pairs { display: flex; flex-wrap: wrap; gap: .55rem; align-items: flex-start; }
+.tok-pair {
+  display: flex; flex-direction: column; align-items: center; gap: .28rem;
+  opacity: 0; transform: translateY(7px);
+  transition: opacity .22s, transform .22s;
+}
+.tok-pair.show { opacity: 1; transform: translateY(0); }
+
+.tok-chip {
+  padding: .3rem .65rem; border-radius: 6px;
+  background: color-mix(in srgb, var(--tc) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tc) 38%, transparent);
+  color: var(--tc);
+  font-family: var(--font-mono); font-size: .8rem; font-weight: 600;
+  letter-spacing: .03em; white-space: nowrap;
+}
+.tok-connector {
+  width: 1px; height: 12px;
+  background: color-mix(in srgb, var(--tc) 28%, transparent);
+}
+.tok-id {
+  font-family: var(--font-mono); font-size: .85rem; font-weight: 700;
+  color: color-mix(in srgb, var(--tc) 95%, var(--white));
+  letter-spacing: .04em;
+  opacity: 0;
+}
+/* ID auto-reveals with a flash 280ms after the parent pair pops in */
+.tok-pair.show .tok-id {
+  animation: tokIdReveal .6s ease 0.28s both;
+}
+@keyframes tokIdReveal {
+  0%   { opacity: 0; text-shadow: none; }
+  40%  { opacity: 1; text-shadow: 0 0 16px var(--tc); }
+  100% { opacity: 1; text-shadow: 0 0 5px color-mix(in srgb, var(--tc) 25%, transparent); }
+}
+
+/* recovered box */
+.tok-stage--recovered {
+  opacity: 0; transition: opacity .4s;
+}
+.tok-stage--recovered.show { opacity: 1; }
+.tok-recovered-box {
+  display: flex; align-items: center; gap: .55rem;
+  background: rgba(255,79,106,0.07);
+  border: 1px solid rgba(255,79,106,0.22);
+  border-radius: 8px; padding: .55rem .9rem;
+  font-family: var(--font-mono); font-size: .9rem;
+}
+.tok-rec-arrow { color: var(--red); font-weight: 700; }
+.tok-recovered-box span:last-child { color: var(--white); letter-spacing: .03em; }
+
+/* light mode */
+[data-theme="light"] .tok-viz { background: var(--bg-card2); }
+[data-theme="light"] .tok-input-box { background: rgba(0,0,0,0.03); }
+[data-theme="light"] .tok-recovered-box { background: rgba(255,79,106,0.06); }
+
+/* ── Tokenization replay button ─────────────────────────────── */
+.tok-replay-btn {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
+  padding: .4rem .9rem;
+  font-family: var(--font-mono); font-size: .72rem;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--teal);
+  cursor: pointer;
+  transition: background .2s, box-shadow .2s;
+  animation: tokReplayFadeIn .4s ease both;
+}
+.tok-replay-btn:hover {
+  background: var(--teal-faint);
+  box-shadow: 0 0 14px rgba(0,210,210,0.2);
+}
+.tok-replay-btn svg {
+  width: 13px; height: 13px;
+  stroke: var(--teal);
+}
+@keyframes tokReplayFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* demo video placeholder */
 .demo-video-wrap {
   background: var(--bg-card);
@@ -681,6 +831,67 @@ section { padding: 6rem 2rem; }
   border: none;
   position: absolute; inset: 0;
 }
+
+/* ── Demo GIF canvas player ──────────────────────────────────── */
+.demo-layer {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.demo-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .6rem;
+  background: rgba(5,11,18,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background .25s;
+  z-index: 4;
+}
+.demo-overlay:hover { background: rgba(5,11,18,0.4); }
+
+.demo-overlay .play-btn {
+  margin: 0;           /* override old margin:auto  */
+  pointer-events: none;/* click is on overlay */
+}
+
+.demo-overlay p {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  color: var(--white);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  opacity: .8;
+}
+
+.demo-replay-btn {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .6rem;
+  background: rgba(5,11,18,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  border-radius: var(--radius-lg);
+  width: 100%; height: 100%;
+  font-family: var(--font-mono); font-size: .75rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--white);
+  cursor: pointer;
+  transition: background .25s;
+}
+.demo-replay-btn:hover { background: rgba(5,11,18,0.4); }
+.demo-replay-btn .play-btn {
+  margin: 0;
+  pointer-events: none;
+}
+
 .demo-placeholder {
   text-align: center;
   z-index: 2;
@@ -847,9 +1058,20 @@ section { padding: 6rem 2rem; }
 }
 
 .team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+}
+
+.team-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.team-row .team-card {
+  flex: 0 0 180px;
 }
 
 .team-card {
@@ -866,7 +1088,7 @@ section { padding: 6rem 2rem; }
 }
 
 .team-avatar {
-  width: 48px; height: 48px;
+  width: 64px; height: 64px;
   border-radius: 50%;
   background: var(--teal-faint);
   border: 2px solid var(--border-mid);
@@ -876,6 +1098,9 @@ section { padding: 6rem 2rem; }
   font-size: 1rem;
   font-weight: 700;
   color: var(--teal);
+  /* photo support */
+  object-fit: cover;
+  overflow: hidden;
 }
 
 .team-card h4 {
@@ -917,7 +1142,7 @@ footer {
 .footer-logo {
   display: flex; align-items: center; gap: .6rem;
 }
-.footer-logo img { width: 28px; height: 28px; }
+.footer-logo img { width: 28px;  }
 .footer-logo span {
   font-family: var(--font-head);
   font-size: 1rem;
@@ -1058,7 +1283,15 @@ footer {
 }
 
 [data-theme="light"] .btn-ghost {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.14);
   color: var(--white);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .btn-ghost:hover {
+  background: rgba(0, 140, 140, 0.08);
+  border-color: var(--teal);
+  box-shadow: inset 0 1px 0 rgba(0,140,140,0.1), 0 0 14px rgba(0,140,140,0.15);
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
