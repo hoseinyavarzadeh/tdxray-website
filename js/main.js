@@ -11,24 +11,16 @@
   const CELL = 60;
 
   const TOKENS = [
-    // --- Confidential Computing & Architecture ---
-    // Kept the heavy hitters, added stronger action words like 'flush', 'evict', 'snoop'
     'TDX', 'TEE', 'CVM', 'VMM', 'L1D', 'LLC', 'GPA', 'HPA',
-    'cache', 'trace', 'fault', 'probe', 'flush', 'evict', 'snoop',
+    'cache', 'trace', 'fault', 'probe', 'flush', 'evict', 'probe',
     'hit', 'miss', 'trap', 'exit', 'sync', 'core', 'node', 
-
-    // --- AI/LLM & Tokenizer (High-Level) ---
-    // Dropped the weird syllables ('ing', 'tion') in favor of strong ML concepts
     'LLM', 'BPE', 'vocab', 'token', 'prompt', 'infer', 'llama', 
-    'gemma', 'bert', 'layer', 'attn', 'mask', 'logit', 'embed', 
-    'tensor', 'weight', 'bias', 'head', 'temp', 'ctx',
-
-    // --- Data Exfil, Cryptography & "The Loot" ---
-    // Swapped random numbers/dates for classic hex and clear PII targets
+    'gemma', 'AI', 'chat', 'agent', 'mask', 'secret', 'embed', 
+    'map', 'weight', 'bias', 'head', 'temp', 'ctx',
     'AES', 'RSA', 'key', 'hash', 'root', 'admin', 'flag', 'creds',
     'byte', 'hex', '0x4f', '0xFF', '0x00', 'addr', 'dump', 'leak',
     'SSN', 'CVC', 'auth', 'pass', 'mail', 'oracle', 'noise', 'lock', 
-    'sniff', 'steal', 'pwn', 'zero', 'true', 'false'
+    'sniff', 'steal', 'pwn', 'zero', 'true', 'false', 'Google', 'UCSD', 'CISPA'
   ];
 
   let cols, rows, cells, tokenMap;
