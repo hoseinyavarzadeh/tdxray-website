@@ -229,7 +229,7 @@ nav {
 
 .hero-authors {
   font-family: var(--font-mono);
-  font-size: .75rem;
+  font-size: 1rem;
   color: var(--muted2);
   margin-bottom: 2.5rem;
   animation: fadeUp .7s .35s ease both;
