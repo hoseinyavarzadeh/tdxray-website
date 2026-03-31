@@ -201,7 +201,7 @@ nav {
 }
 
 .hero-logo {
-  width: 400px; height: 400px;
+  width: 300px; height: 300px;
   margin: 0 auto 1.8rem;
   object-fit: contain;
   filter: drop-shadow(0 0 60px rgba(0, 210, 210, 0.776));
@@ -229,7 +229,7 @@ nav {
 
 .hero-authors {
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.7rem;
   color: var(--muted2);
   margin-bottom: 2.5rem;
   animation: fadeUp .7s .35s ease both;
